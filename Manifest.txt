@@ -4,3 +4,5 @@ README.rdoc
 Rakefile
 lib/ru_propisju.rb
 test/test_ru_propisju.rb
+locales/ru.ru_propisju.yml
+locales/en.ru_propisju.yml

@@ -1,12 +1,35 @@
-# -*- encoding: utf-8 -*- 
-$KCODE = 'u' if RUBY_VERSION < '1.9.0'
+require 'i18n'
+
+module I18nInitialization
+  extend self
+
+  def init
+    I18n.load_path.unshift *locale_files
+  end
+
+  def locale_files
+    Dir[File.join(File.dirname(__FILE__), 'locales', '**/*')]
+  end
+end
+
+I18nInitialization.init
 
 # Самый лучший, прекрасный, кривой и неотразимый суперпечататель суммы прописью для Ruby.
 #
 #   RuPropisju.rublej(123) # "сто двадцать три рубля"
 module RuPropisju
   
-  VERSION = '1.1.0'
+  VERSION = '1.1.1'
+  
+  def t(s)
+    I18n.t("propisju.#{s}")
+  end
+  
+  def t_decimals
+    t("decimals").
+      map{|e| [e, e.gsub(/ая$/, "ых").gsub(/th$/, "ths"), e.gsub(/ая$/, "ых").gsub(/th$/, "ths"), ]}.
+      freeze
+  end
   
   # Выбирает нужный падеж существительного в зависимости от числа
   #
@@ -33,16 +56,16 @@ module RuPropisju
   def rublej(amount)
     pts = []
     
-    pts << propisju_shtuk(amount.to_i, 1, "рубль", "рубля", "рублей") unless amount.to_i == 0
+    pts << propisju_shtuk(amount.to_i, *t('money.rur')) unless amount.to_i == 0
     
     if amount.kind_of?(Float)
       remainder = (amount.divmod(1)[1]*100).round
       if (remainder == 100)
-        pts = [propisju_shtuk(amount.to_i+1, 1, 'рубль', 'рубля', 'рублей')]
+        pts = [propisju_shtuk(amount.to_i+1, *t('money.rur'))]
       else
         kop = remainder.to_i
         unless kop.zero?
-          pts << kop << choose_plural(kop, 'копейка', 'копейки', 'копеек')
+          pts << kop << choose_plural(kop, *t('money.kop'))
         end
       end
     end
@@ -56,7 +79,7 @@ module RuPropisju
   #   propisju(221, 2) => "двести двадцать одна"
   def propisju(amount, gender = 1)
     if amount.is_a?(Integer) || amount.is_a?(Bignum)
-      propisju_int(amount, gender)
+      propisju_int(amount, nil, nil, nil, gender)
     else # также сработает для Decimal, дробные десятичные числительные в долях поэтому женского рода
       propisju_float(amount)
     end
@@ -68,13 +91,13 @@ module RuPropisju
   def griven(amount)
     pts = []
 
-    pts << propisju_int(amount.to_i, 2, "гривна", "гривны", "гривен") unless amount.to_i == 0
+    pts << propisju_int(amount.to_i, *t('money.uah'), 2) unless amount.to_i == 0
     if amount.kind_of?(Float)
       remainder = (amount.divmod(1)[1]*100).round
       if (remainder == 100)
-        pts = [propisju_int(amount.to_i + 1, 2, 'гривна', 'гривны', 'гривен')]
+        pts = [propisju_int(amount.to_i + 1, *t('money.uah'), 2)]
       else
-        pts << propisju_int(remainder.to_i, 2, 'копейка', 'копейки', 'копеек')
+        pts << propisju_int(remainder.to_i, *t('money.kop'), 2)
       end
     end
     
@@ -90,13 +113,13 @@ module RuPropisju
 
   # Выводит сумму данного существительного прописью и выбирает правильное число и падеж
   #
-  #    RuPropisju.propisju_shtuk(21, 3, "колесо", "колеса", "колес") #=> "двадцать одно колесо"
-  #    RuPropisju.propisju_shtuk(21, 1, "мужик", "мужика", "мужиков") #=> "двадцать один мужик"
-  def propisju_shtuk(items, gender = 1, *forms)
+  #    RuPropisju.propisju_shtuk(21, "колесо", "колеса", "колес", 3) #=> "двадцать одно колесо"
+  #    RuPropisju.propisju_shtuk(21, "мужик", "мужика", "мужиков", 1) #=> "двадцать один мужик"
+  def propisju_shtuk(items, one, few, many, gender = 1)
     r = if items == items.to_i
-      [propisju(items, gender), choose_plural(items, *forms)]
+      [propisju(items, gender), choose_plural(items, one, few, many)]
     else
-      [propisju(items, gender), forms[1]]
+      [propisju(items, gender), few]
     end
     
     r.join(" ")
@@ -104,121 +127,57 @@ module RuPropisju
   
   private
   
-  def compose_ordinal(into, remaining_amount, gender, one_item='', two_items='', five_items='')
+  def compose_ordinal(into, remaining_amount, one_item='', few_items='', many_items='', gender = 1)
     rest, rest1, chosen_ordinal, ones, tens, hundreds = [nil]*6
     #
     rest = remaining_amount % 1000
     remaining_amount = remaining_amount / 1000
     if rest == 0 
       # последние три знака нулевые 
-      into = five_items + " " if into == ""
+      into = many_items + " " if into == ""
       return [into, remaining_amount]
     end
-    #
-    # начинаем подсчет с Rest
-    chosen_ordinal = five_items
     
     # сотни
-    hundreds = case rest / 100
-      when 0 then ""
-      when 1 then "сто "
-      when 2 then "двести "
-      when 3 then "триста "
-      when 4 then "четыреста "
-      when 5 then "пятьсот "
-      when 6 then "шестьсот "
-      when 7 then "семьсот "
-      when 8 then "восемьсот "
-      when 9 then "девятьсот "
-    end
+    hundreds = t('hundreds')[rest / 100]
 
     # десятки
     rest = rest % 100
     rest1 = rest / 10
     ones = ""
-    tens = case rest1
-      when 0 then ""
-      when 1 # особый случай
-        case rest
-          when 10 then "десять "
-          when 11 then "одиннадцать "
-          when 12 then "двенадцать "
-          when 13 then "тринадцать "
-          when 14 then "четырнадцать "
-          when 15 then "пятнадцать "
-          when 16 then "шестнадцать "
-          when 17 then "семнадцать "
-          when 18 then "восемнадцать "
-          when 19 then "девятнадцать "
-        end
-      when 2 then "двадцать "
-      when 3 then "тридцать "
-      when 4 then "сорок "
-      when 5 then "пятьдесят "
-      when 6 then "шестьдесят "
-      when 7 then "семьдесят "
-      when 8 then "восемьдесят "
-      when 9 then "девяносто "
-    end
-    #
-    if rest1 < 1 or rest1 > 1 # единицы
-      case rest % 10
-        when 1
-          ones = case gender
-            when 1 then "один "
-            when 2 then "одна "
-            when 3 then "одно "
-          end
-          chosen_ordinal = one_item
-        when 2
-          if gender == 2
-            ones = "две "
-          else
-            ones = "два " 
-          end       
-          chosen_ordinal = two_items
-        when 3
-          ones = "три "
-          chosen_ordinal = two_items
-        when 4
-          ones = "четыре "
-          chosen_ordinal = two_items
-        when 5
-          ones = "пять "
-        when 6
-          ones = "шесть "
-        when 7
-          ones = "семь "
-        when 8
-          ones = "восемь "
-        when 9
-          ones = "девять "
-      end
+    tens = 1 == rest1 ? t('teens')[rest-10] : t('tens')[rest1]
+
+    unit = rest % 10
+
+    # единицы
+    ones = (rest1 < 1 or rest1 > 1) ? t('units')[gender-1][unit] : ''
+
+    chosen_ordinal = if unit == 1
+      one_item
+    elsif (2..4).include?(unit) && !(12..14).include?(rest)
+      few_items
+    else
+      many_items
     end
     
-    plural = [hundreds, tens, ones, chosen_ordinal,  " ",  into].join.strip 
+    plural = [hundreds, tens, ones, chosen_ordinal,  " ",  into].join(' ').squeeze(' ').strip
     return [plural, remaining_amount] 
   end
-  
-  DECIMALS = %w( целая десятая сотая тысячная десятитысячная стотысячная
-      миллионная десятимиллионная стомиллионная миллиардная десятимиллиардная 
-      стомиллиардная триллионная
-  ).map{|e| [e, e.gsub(/ая$/, "ых"), e.gsub(/ая$/, "ых"), ] }.freeze
   
   # Выдает сумму прописью с учетом дробной доли. Дробная доля округляется до миллионной, или (если
   # дробная доля оканчивается на нули) до ближайшей доли ( 500 тысячных округляется до 5 десятых).
   # Дополнительный аргумент - род существительного (1 - мужской, 2- женский, 3-средний)
-  def propisju_float(num)
+  def propisju_float(num, gender = 2)
     
     # Укорачиваем до триллионной доли
-    formatted = ("%0.#{DECIMALS.length}f" % num).gsub(/0+$/, '')
+    formatted = ("%0.#{t_decimals.length}f" % num).gsub(/0+$/, '')
     wholes, decimals = formatted.split(/\./)
     
     return propisju_int(wholes.to_i) if decimals.to_i.zero?
     
-    whole_st = propisju_shtuk(wholes.to_i, 2, *DECIMALS[0])
+    whole_st = propisju_shtuk(wholes.to_i, *t_decimals[0], gender)
     
-    rem_st = propisju_shtuk(decimals.to_i, 2, *DECIMALS[decimals.length])
+    rem_st = propisju_shtuk(decimals.to_i, *t_decimals[decimals.length], gender)
     [whole_st, rem_st].compact.join(" ")
   end
   
@@ -227,32 +186,32 @@ module RuPropisju
   #   amount - числительное
   #   gender   = 1 - мужской, = 2 - женский, = 3 - средний
   #   one_item - именительный падеж единственного числа (= 1)
-  #   two_items - родительный падеж единственного числа (= 2-4)
-  #   five_items - родительный падеж множественного числа ( = 5-10)
+  #   few_items - родительный падеж единственного числа (= 2-4)
+  #   many_items - родительный падеж множественного числа ( = 5-10)
   # 
   # Примерно так:
-  #   propisju(42, 1, "сволочь", "сволочи", "сволочей") # => "сорок две сволочи"
-  def propisju_int(amount, gender = 1, one_item = '', two_items = '', five_items = '')
+  #   propisju(42, "сволочь", "сволочи", "сволочей", 1) # => "сорок две сволочи"
+  def propisju_int(amount, one_item = '', few_items = '', many_items = '', gender = 1)
     
-    return "ноль " + five_items if amount.zero?
+    return t('zero') + many_items if amount.zero?
     
     # единицы
-    into, remaining_amount = compose_ordinal('', amount, gender, one_item, two_items, five_items)
+    into, remaining_amount = compose_ordinal('', amount, one_item, few_items, many_items, gender)
     
     return into if remaining_amount == 0
     
     # тысячи
-    into, remaining_amount = compose_ordinal(into, remaining_amount, 2, "тысяча", "тысячи", "тысяч") 
+    into, remaining_amount = compose_ordinal(into, remaining_amount, *t('orders.t'), 2)
     
     return into if remaining_amount == 0
     
     # миллионы
-    into, remaining_amount = compose_ordinal(into, remaining_amount, 1, "миллион", "миллиона", "миллионов")
+    into, remaining_amount = compose_ordinal(into, remaining_amount, *t('orders.m'))
     
     return into if remaining_amount == 0
     
     # миллиарды
-    into, remaining_amount = compose_ordinal(into, remaining_amount, 1, "миллиард", "миллиарда", "миллиардов")
+    into, remaining_amount = compose_ordinal(into, remaining_amount, *t('orders.b'), 2)
     return into
   end
   

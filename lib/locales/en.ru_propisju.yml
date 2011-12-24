@@ -1,0 +1,20 @@
+en:
+  propisju:
+    money:
+      rur: [rouble, roubles, roubles]
+      uah: [hryvna, hryvnas, hryvnas]
+      kop: [kopeck, kopecks, kopecks]
+    hundreds: ['', 'one hundred', 'two hundred', 'three hundred', 'four hundred', 'five hundred', 'six hundred', 'seven hundred', 'eight hundred', 'nine hundred']
+    teens: [ten, eleven, twelve, thirteen, fourteen, fifteen, sixteen, seventeen, eighteen, nineteen]
+    tens: ['', ten, twenty, thirty, fourty, fifty, sixty, seventy, eighty, ninety]
+    units:
+      - ['', one, two, three, four, five, six, seven, eight, nine]
+      - ['', one, two, three, four, five, six, seven, eight, nine]
+      - ['', one, two, three, four, five, six, seven, eight, nine]
+    decimals: [and, tenth, hundredth, thousandth, ten-thousandth, hundred-thousandth, millionth,
+      ten-millionth, hundred-millionth, billionth, ten-billionth, hundred-billionth]
+    orders:
+      t: [thousand, thousands, thousands]
+      m: [million, millions, millions]
+      b: [billion, billions, billions]
+    zero: zero
