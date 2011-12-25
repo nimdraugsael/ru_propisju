@@ -1,14 +1,27 @@
-# -*- ruby -*-
-
 require 'rubygems'
-require 'hoe'
+require 'jeweler'
+require './lib/ru_propisju'
 
-Hoe.spec 'ru_propisju' do | p |
-  p.readme_file = 'README.rdoc'
-  p.extra_rdoc_files  = FileList['*.rdoc'] + FileList['*.txt']
+Jeweler::Tasks.new do |gem|
+  gem.version = RuPropisju::VERSION
+  gem.name = "ru_propisju"
+  gem.summary = "Cумма прописью"
+  gem.email = "'alfuken@me.com'"
+  gem.homepage = "http://github.com/alfuken/ru_propisju"
+  gem.authors = ["Julik Tarkhanov", 'Bohdan Shchepanskyy']
+  gem.license = 'MIT'
   
-  p.developer('Julik Tarkhanov', 'me@julik.nl')
-  p.developer('Bohdan Shchepanskyy', 'alfuken@me.com')
+  # Do not package invisibles
+  gem.files.exclude ".*"
+end
+Jeweler::RubygemsDotOrgTasks.new
+
+require 'rake/testtask'
+desc "Run all tests"
+Rake::TestTask.new("test") do |t|
+  t.libs << "test"
+  t.pattern = 'test/**/test_*.rb'
+  t.verbose = true
 end
 
-# vim: syntax=ruby
+task :default => [ :test ]

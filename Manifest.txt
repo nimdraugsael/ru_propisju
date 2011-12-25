@@ -2,6 +2,7 @@ History.txt
 Manifest.txt
 README.rdoc
 Rakefile
+init.rb
 lib/ru_propisju.rb
 test/test_ru_propisju.rb
 locales/ru.ru_propisju.yml
