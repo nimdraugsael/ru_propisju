@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "ru_propisju"
-  s.version = "1.1.1"
+  s.version = "1.1.1i18n"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Julik Tarkhanov", "Bohdan Shchepanskyy"]
@@ -15,8 +15,6 @@ Gem::Specification.new do |s|
     "README.rdoc"
   ]
   s.files = [
-    "Gemfile",
-    "Gemfile.lock",
     "History.txt",
     "Manifest.txt",
     "README.rdoc",
