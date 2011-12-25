@@ -15,8 +15,6 @@ Gem::Specification.new do |s|
     "README.rdoc"
   ]
   s.files = [
-    "Gemfile",
-    "Gemfile.lock",
     "History.txt",
     "Manifest.txt",
     "README.rdoc",
