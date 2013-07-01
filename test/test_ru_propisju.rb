@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*- 
+# -*- encoding: utf-8 -*-
 $KCODE = 'u' if RUBY_VERSION < '1.9.0'
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
@@ -30,7 +30,7 @@ class TestRuPropisju < Test::Unit::TestCase
       assert_equal "six hundred twelve", RuPropisju.propisju(612)
     end
   end
-  
+
   def test_propisju_shtuk
     I18n.with_locale(:ru) do
       assert_equal "шесть целых", RuPropisju.propisju_shtuk(6, "целая", "целых", "целых", 2)
@@ -48,7 +48,7 @@ class TestRuPropisju < Test::Unit::TestCase
       assert_equal "two hundred twelve and four tenths litres", RuPropisju.propisju_shtuk(212.40, "litre", "litres", "litres", 1)
     end
   end
-  
+
   def test_propisju_for_floats
     I18n.with_locale(:ru) do
       assert_equal "шесть целых пять десятых", RuPropisju.propisju(6.50)
@@ -68,7 +68,7 @@ class TestRuPropisju < Test::Unit::TestCase
       assert_equal "twelve thousands three hundred fourty five and six hundred seventy eight thousandths", RuPropisju.propisju(12345.678)
     end
   end
-  
+
   def test_choose_plural
     I18n.with_locale(:ru) do
       assert_equal "чемодана", RuPropisju.choose_plural(523, "чемодан", "чемодана", "чемоданов")
@@ -84,7 +84,7 @@ class TestRuPropisju < Test::Unit::TestCase
       assert_equal "wheels", RuPropisju.choose_plural(260, "wheel", "wheels", "wheels")
     end
   end
-  
+
   def test_rublej
     I18n.with_locale(:ru) do
       assert_equal "сто двадцать три рубля", RuPropisju.rublej(123)
@@ -93,6 +93,7 @@ class TestRuPropisju < Test::Unit::TestCase
       assert_equal "триста тридцать два рубля", RuPropisju.rublej(331.995)
       assert_equal "один рубль", RuPropisju.rubl(1)
       assert_equal "три рубля 14 копеек", RuPropisju.rublja(3.14)
+      assert_equal "одна тысяча рублей", RuPropisju.rublej(1000)
     end
 
     I18n.with_locale(:en) do
@@ -104,7 +105,7 @@ class TestRuPropisju < Test::Unit::TestCase
       assert_equal "three roubles 14 kopecks", RuPropisju.rublja(3.14)
     end
   end
-  
+
   def test_griven
     I18n.with_locale(:ru) do
       assert_equal "сто двадцать три гривны", RuPropisju.griven(123)
@@ -126,7 +127,7 @@ class TestRuPropisju < Test::Unit::TestCase
       assert_equal "three hryvnas fourteen kopecks", RuPropisju.grivny(3.14)
     end
   end
-  
+
   def test_kopeek
     I18n.with_locale(:ru) do
       assert_equal "сто двадцать три рубля", RuPropisju.kopeek(12300)
